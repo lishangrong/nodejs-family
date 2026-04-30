@@ -1,19 +1,17 @@
 const mongoose = require("mongoose");
+const { mongoPath } = require("../config/config.default");
 
 async function mian() {
-  await mongoose.connect("mongodb://127.0.0.1:27017/repress-video");
+  await mongoose.connect(mongoPath);
 }
 
 mian()
   .then((res) => {
-    console.log("mongo connected");
+    console.log("mongo 连接成功");
   })
   .catch((err) => {
     console.log(err);
-    console.log("mongo connection failed");
-  })
-  .finally(() => {
-    // mongoose.disconnect();
+    console.log("mongo 连接失败");
   });
 
 module.exports = {

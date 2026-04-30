@@ -35,7 +35,13 @@ module.exports.register = validate([
       }
     })
     .bail(),
-  body("password").notEmpty().withMessage("密码不能为空").bail(),
+  body("password")
+    .notEmpty()
+    .withMessage("密码不能为空")
+    .bail()
+    .isLength({ min: 5 })
+    .withMessage("密码长度不能小于5位")
+    .bail(),
 ]);
 
 module.exports.login = validate([
@@ -45,6 +51,13 @@ module.exports.login = validate([
     .bail()
     .isEmail()
     .withMessage("邮箱格式错误")
+    .bail()
+    .custom(async (value) => {
+      const emailValidate = await User.findOne({ email: value });
+      if (!emailValidate) {
+        return Promise.reject("邮箱未注册");
+      }
+    })
     .bail(),
 
   body("password").notEmpty().withMessage("密码不能为空").bail(),

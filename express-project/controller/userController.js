@@ -1,15 +1,16 @@
 const { User } = require("../model");
-const jwt = require("jsonwebtoken");
 const { createToken } = require("../util/jwt");
 // 注册
 exports.register = async (req, res) => {
   const userModel = new User(req.body);
   const dbBack = await userModel.save();
-  res.status(201).json(dbBack);
+  let user = dbBack.toJSON();
+  // 在前端不给用户展示password字段
+  delete user.password;
+  res.status(201).json({ user });
 };
 // 登录
 exports.login = async (req, res) => {
-  // console.log(req.body);
   // 客户端输入验证
   // 链接数据库查询
   let dbBack = await User.findOne(req.body);
