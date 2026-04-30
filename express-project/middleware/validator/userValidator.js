@@ -62,3 +62,33 @@ module.exports.login = validate([
 
   body("password").notEmpty().withMessage("密码不能为空").bail(),
 ]);
+
+module.exports.update = validate([
+  body("email")
+    .isEmail()
+    .withMessage("邮箱格式错误")
+    .bail()
+    .custom(async (value) => {
+      const emailValidate = await User.findOne({ email: value });
+      if (emailValidate) {
+        return Promise.reject("邮箱已被注册");
+      }
+    })
+    .bail(),
+  body("username")
+    .custom(async (value) => {
+      const userValidate = await User.findOne({ username: value });
+      if (userValidate) {
+        return Promise.reject("用户名已被注册");
+      }
+    })
+    .bail(),
+  body("phone")
+    .custom(async (value) => {
+      const phoneValidate = await User.findOne({ phone: value });
+      if (phoneValidate) {
+        return Promise.reject("手机已被注册");
+      }
+    })
+    .bail(),
+]);

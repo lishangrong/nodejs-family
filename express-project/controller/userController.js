@@ -22,6 +22,15 @@ exports.login = async (req, res) => {
   dbBack.token = await createToken(dbBack);
   res.status(200).json(dbBack);
 };
+
+// 更新用户信息
+exports.update = async (req, res) => {
+  const id = req.user.userInfo._id;
+  // 返回更新后的结果
+  const dbBack = await User.findByIdAndUpdate(id, req.body, { new: true });
+  res.status(200).json({ user: dbBack });
+};
+
 exports.list = async (req, res) => {
   console.log(res.method);
   res.send("/user-list");
