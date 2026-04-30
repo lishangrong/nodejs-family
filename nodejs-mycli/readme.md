@@ -10,3 +10,7 @@ npm link
 ## 脚手架项目
 
 这是一个基于commander的脚手架项目，用于快速创建新的nodejs项目。
+
+## 使用脚手架创建nodejs项目
+
+mycli create [project-name]
