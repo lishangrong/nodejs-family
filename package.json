@@ -1,0 +1,21 @@
+{
+  "name": "mycli",
+  "version": "1.0.0",
+  "main": "file.js",
+  "bin": {
+    "mycli": "bin/cli.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "commander": "^14.0.3",
+    "download-git-repo": "^3.0.2",
+    "inquirer": "^8.2.7",
+    "ora": "^5.4.1"
+  }
+}
