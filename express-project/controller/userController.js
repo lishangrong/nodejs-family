@@ -1,5 +1,8 @@
+const fs = require("fs");
+const { promisify } = require("util");
 const { User } = require("../model");
 const { createToken } = require("../util/jwt");
+const rename = promisify(fs.rename);
 // 注册
 exports.register = async (req, res) => {
   const userModel = new User(req.body);
@@ -29,6 +32,20 @@ exports.update = async (req, res) => {
   // 返回更新后的结果
   const dbBack = await User.findByIdAndUpdate(id, req.body, { new: true });
   res.status(200).json({ user: dbBack });
+};
+
+// 用户头像上传
+exports.headimg = async (req, res) => {
+  const fileArr = req.file.originalname.split(".");
+  const filetype = fileArr[fileArr.length - 1];
+  const filename = req.file.filename + "." + filetype;
+
+  try {
+    await rename("./public/" + req.file.filename, "./public/" + filename);
+    res.status(201).json({ filepath: filename });
+  } catch (error) {
+    res.status(500).json({ error });
+  }
 };
 
 exports.list = async (req, res) => {

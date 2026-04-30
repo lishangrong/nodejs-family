@@ -7,6 +7,8 @@ const app = express();
 // 解析请求体
 app.use(express.json());
 app.use(express.urlencoded());
+// 静态资源服务
+app.use(express.static("public"));
 app.use(cors());
 app.use(morgan("dev"));
 app.use("/api/v1", router);
