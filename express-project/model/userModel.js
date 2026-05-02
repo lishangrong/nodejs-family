@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const md5 = require("md5");
+const baseModel = require("./baseModel");
 
 // 定义用户模型
 const userSchema = new mongoose.Schema({
@@ -37,14 +38,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
-  createAt: {
-    type: Date,
-    default: Date.now(),
+  subscribeCount: {
+    type: Number,
+    default: 0,
   },
-  updateAt: {
-    type: Date,
-    default: Date.now(),
-  },
+  ...baseModel,
 });
 
 module.exports = userSchema;

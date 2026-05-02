@@ -7,16 +7,19 @@ const multer = require("multer");
 const upload = multer({ dest: "public/" });
 
 router
+  .get("/getchannel", verifyToken(), userController.getchannel)
+  .get("/getsubscribe/:userId", userController.getgetsubscribeuser)
+  .get("/getuser/:userId", verifyToken(false), userController.getuser)
+  .get("/subscribe/:userId", verifyToken(), userController.subscribe)
+  .get("/unsubscribe/:userId", verifyToken(), userController.unsubscribe)
   .post("/register", userValidator.register, userController.register)
   .post("/login", userValidator.login, userController.login)
-  .get("/list", verifyToken, userController.list)
-  .put("/", verifyToken, userValidator.update, userController.update)
+  .put("/", verifyToken(), userValidator.update, userController.update)
   .post(
     "/headimg",
-    verifyToken,
+    verifyToken(),
     upload.single("headimg"),
     userController.headimg,
-  )
-  .delete("/", userController.delete);
+  );
 
 module.exports = router;

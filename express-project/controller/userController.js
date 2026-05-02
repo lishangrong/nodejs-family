@@ -1,8 +1,126 @@
 const fs = require("fs");
+const lodash = require("lodash");
 const { promisify } = require("util");
-const { User } = require("../model");
+const { User, Subscribe } = require("../model");
 const { createToken } = require("../util/jwt");
 const rename = promisify(fs.rename);
+
+// 获取粉丝列表
+exports.getchannel = async (req, res) => {
+  let channellist = await Subscribe.find({
+    channel: req.user.userInfo._id,
+  }).populate("user");
+  channellist = channellist.map((item) => {
+    return lodash.pick(item.user, [
+      "_id",
+      "username",
+      "email",
+      "subscribeCount",
+    ]);
+  });
+  res.status(200).json(channellist);
+};
+// 获取关注的频道列表
+exports.getgetsubscribeuser = async (req, res) => {
+  let subscribelist = await Subscribe.find({
+    user: req.params.userId,
+  }).populate("channel");
+  subscribelist = subscribelist.map((item) => {
+    return lodash.pick(item.channel, [
+      "_id",
+      "username",
+      "email",
+      "subscribeCount",
+    ]);
+  });
+  res.status(200).json(subscribelist);
+};
+
+// 获取频道信息
+exports.getuser = async (req, res) => {
+  let isSubscribe = false;
+  if (req.user) {
+    const record = await Subscribe.findOne({
+      channel: req.params.userId,
+      user: req.user.userInfo._id,
+    });
+    if (record) {
+      isSubscribe = true;
+    } else {
+      isSubscribe = false;
+    }
+  }
+
+  const user = await User.findById(req.params.userId);
+  user.isSubscribe = isSubscribe;
+  // 在前端不给用户展示password字段
+  res.status(200).json({
+    ...lodash.pick(user, [
+      "_id",
+      "username",
+      "email",
+      "subscribeCount",
+      "isSubscribe",
+    ]),
+  });
+};
+
+// 关注频道
+exports.subscribe = async (req, res) => {
+  const channelId = req.params.userId;
+  // 当前登录用户
+  const id = req.user.userInfo._id;
+  if (id === channelId) {
+    return res.status(401).json({ error: "不能订阅自己" });
+  }
+  // 检查是否已关注
+  const subscribe = await Subscribe.findOne({
+    user: id,
+    channel: channelId,
+  });
+  if (subscribe) {
+    return res.status(401).json({ error: "已订阅" });
+  }
+  // 关注
+  await new Subscribe({
+    user: id,
+    channel: channelId,
+  }).save();
+
+  // 更新被关注数量
+  const user = await User.findById(channelId);
+  user.subscribeCount++;
+  await user.save();
+  // await User.findByIdAndUpdate(channelId, { $inc: { subscribeCount: 1 } });
+  res.status(200).json({ msg: "订阅成功" });
+};
+
+// 取消关注频道
+exports.unsubscribe = async (req, res) => {
+  const channelId = req.params.userId;
+  // 当前登录用户
+  const id = req.user.userInfo._id;
+  if (id === channelId) {
+    return res.status(401).json({ error: "不能取订阅自己" });
+  }
+
+  // 检查是否已关注
+  const record = await Subscribe.findOne({
+    user: id,
+    channel: channelId,
+  });
+
+  if (record) {
+    await record.deleteOne();
+    const user = await User.findById(channelId);
+    user.subscribeCount--;
+    await user.save();
+    res.status(200).json({ msg: "取消订阅成功" });
+  } else {
+    return res.status(401).json({ error: "未订阅该频道" });
+  }
+};
+
 // 注册
 exports.register = async (req, res) => {
   const userModel = new User(req.body);
@@ -46,16 +164,4 @@ exports.headimg = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error });
   }
-};
-
-exports.list = async (req, res) => {
-  console.log(res.method);
-  res.send("/user-list");
-};
-exports.users = async (req, res) => {
-  res.send("/users");
-};
-
-exports.delete = async (req, res) => {
-  res.send("/delete");
 };
