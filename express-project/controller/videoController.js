@@ -119,5 +119,57 @@ exports.like = async (req, res) => {
     like: -1,
   });
   await videoInfo.save();
-  res.status(200).json({ message: isLike ? "点赞成功" : "取消点赞成功" });
+  res.status(200).json({ video: videoInfo, isLike });
+};
+
+exports.dislike = async (req, res) => {
+  const { videoId } = req.params;
+  let videoInfo = await Video.findById(videoId);
+  if (!videoInfo) {
+    return res.status(404).json({ error: "视频不存在" });
+  }
+  const userId = req.user.userInfo._id;
+  const record = await Videolike.findOne({
+    video: videoId,
+    user: userId,
+  });
+  let isDislike = true;
+  if (record && record.like === -1) {
+    await record.deleteOne();
+    isDislike = false;
+  } else if (record && record.like === 1) {
+    record.like = -1;
+    record.save();
+  } else {
+    await new Videolike({
+      like: -1,
+      video: videoId,
+      user: userId,
+    }).save();
+  }
+  videoInfo.likeCount = await Videolike.countDocuments({
+    video: videoId,
+    like: 1,
+  });
+  videoInfo.dislikeCount = await Videolike.countDocuments({
+    video: videoId,
+    like: -1,
+  });
+  await videoInfo.save();
+  res.status(200).json({ video: videoInfo, isDislike });
+};
+
+// 获取点赞列表
+exports.likeList = async (req, res) => {
+  const { pageNum = 1, pageSize = 10 } = req.body;
+  let likes = await Videolike.find({ like: 1, user: req.user.userInfo._id })
+    .skip((pageNum - 1) * pageSize)
+    .limit(pageSize)
+    .populate("video", "_id, title, vodvideoId");
+  const totalCount = await Videolike.countDocuments({
+    like: 1,
+    user: req.user.userInfo._id,
+  });
+
+  res.status(200).json({ likes, totalCount });
 };
