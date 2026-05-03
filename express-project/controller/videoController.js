@@ -1,4 +1,4 @@
-const { Video, Videocomment } = require("../model");
+const { Video, Videocomment, Videolike } = require("../model");
 
 exports.videolist = async (req, res) => {
   let { pageNum = 1, pageSize = 10 } = req.body;
@@ -82,4 +82,42 @@ exports.deleteComment = async (req, res) => {
   videoInfo.commentCount--;
   await videoInfo.save();
   res.status(200).json({ message: "评论删除成功" });
+};
+
+exports.like = async (req, res) => {
+  const { videoId } = req.params;
+  let videoInfo = await Video.findById(videoId);
+  if (!videoInfo) {
+    return res.status(404).json({ error: "视频不存在" });
+  }
+  const userId = req.user.userInfo._id;
+  const record = await Videolike.findOne({
+    video: videoId,
+    user: userId,
+  });
+  let isLike = true;
+  if (record && record.like === 1) {
+    await record.deleteOne();
+    isLike = false;
+  } else if (record && record.like === -1) {
+    record.like = 1;
+    record.save();
+  } else {
+    const like = await new Videolike({
+      like: 1,
+      video: videoId,
+      user: userId,
+    }).save();
+  }
+
+  videoInfo.likeCount = await Videolike.countDocuments({
+    video: videoId,
+    like: 1,
+  });
+  videoInfo.dislikeCount = await Videolike.countDocuments({
+    video: videoId,
+    like: -1,
+  });
+  await videoInfo.save();
+  res.status(200).json({ message: isLike ? "点赞成功" : "取消点赞成功" });
 };

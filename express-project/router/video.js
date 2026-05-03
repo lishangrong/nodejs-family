@@ -21,6 +21,7 @@ router
     "/comment/:videoId/:commentId",
     verifyToken(),
     videoController.deleteComment,
-  );
+  )
+  .get("/like/:videoId/", verifyToken(), videoController.like);
 
 module.exports = router;
