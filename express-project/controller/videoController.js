@@ -1,4 +1,4 @@
-const { Video, Videocomment, Videolike } = require("../model");
+const { Video, Videocomment, Videolike, Subscribe } = require("../model");
 
 exports.videolist = async (req, res) => {
   let { pageNum = 1, pageSize = 10 } = req.body;
@@ -10,12 +10,37 @@ exports.videolist = async (req, res) => {
   const videoCount = await Video.countDocuments();
   res.status(200).json({ videlist: geVideo, videoCount });
 };
+// 获取视频详情
 exports.video = async (req, res) => {
   const { videoId } = req.params;
   let videoInfo = await Video.findById(videoId).populate(
     "user",
     "_id, username, email",
   );
+  videoInfo.islike = false;
+  videoInfo.isDislike = false;
+  videoInfo.isSubscribe = false;
+  if (req.user.userInfo) {
+    const userId = req.user.userInfo._id;
+    const like = await Videolike.findOne({
+      like: 1,
+      user: userId,
+      video: videoId,
+    });
+    const dislike = await Videolike.findOne({
+      like: -1,
+      user: userId,
+      video: videoId,
+    });
+    const subscribe = await Subscribe.findOne({
+      user: userId,
+      channel: videoInfo.user._id,
+    });
+    videoInfo.islike = like ? true : false;
+    videoInfo.isDislike = dislike ? true : false;
+    videoInfo.isSubscribe = subscribe ? true : false;
+  }
+
   res.status(200).json(videoInfo);
 };
 
