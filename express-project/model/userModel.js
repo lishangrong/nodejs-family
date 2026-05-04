@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const md5 = require("md5");
+const md5 = require("../util/md5");
 const baseModel = require("./baseModel");
 
 // 定义用户模型
