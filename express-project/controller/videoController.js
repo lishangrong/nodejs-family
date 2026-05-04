@@ -5,6 +5,7 @@ const {
   Subscribe,
   Collect,
 } = require("../model");
+const { hotInc, topHots } = require("../model/redis/redishotsinc");
 
 exports.videolist = async (req, res) => {
   let { pageNum = 1, pageSize = 10 } = req.body;
@@ -46,9 +47,10 @@ exports.video = async (req, res) => {
     videoInfo.isDislike = dislike ? true : false;
     videoInfo.isSubscribe = subscribe ? true : false;
   }
-
+  // 获取视频详情，热度 +1
+  await hotInc(videoId, 1);
   res.status(200).json(videoInfo);
-};
+};;
 
 exports.createVideo = async (req, res) => {
   try {
@@ -75,12 +77,16 @@ exports.comment = async (req, res) => {
     video: videoId,
     user: req.user.userInfo._id,
   }).save();
+  // 评论视频，热度 +2
+  if (comment) {
+    await hotInc(videoId, 2);
+  }
 
   videoInfo.commentCount++;
   await videoInfo.save();
 
   res.status(201).json(comment);
-};
+};;
 
 // 获取评论列表
 exports.commentlist = async (req, res) => {
@@ -133,12 +139,15 @@ exports.like = async (req, res) => {
   } else if (record && record.like === -1) {
     record.like = 1;
     record.save();
+    await hotInc(videoId, 2);
   } else {
     const like = await new Videolike({
       like: 1,
       video: videoId,
       user: userId,
     }).save();
+    // 点赞视频，热度 +2
+    await hotInc(videoId, 2);
   }
 
   videoInfo.likeCount = await Videolike.countDocuments({
@@ -226,7 +235,18 @@ exports.collect = async (req, res) => {
     video: videoId,
     user: userId,
   }).save();
+  // 收藏视频，热度 +3
+  if (mycollect) {
+    await hotInc(videoId, 3);
+  }
   res.status(200).json(mycollect);
-};
+};;
 
 //热度： 观看 +1， 点赞 +2 ， 评论 +2，  收藏 +3
+
+// 获取热门视频排行列表
+exports.getHots = async (req, res) => {
+  const { topnum = 10 } = req.params;
+  const hots = await topHots(topnum);
+  res.status(200).json({ hots });
+};
