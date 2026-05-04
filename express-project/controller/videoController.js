@@ -1,4 +1,10 @@
-const { Video, Videocomment, Videolike, Subscribe } = require("../model");
+const {
+  Video,
+  Videocomment,
+  Videolike,
+  Subscribe,
+  Collect,
+} = require("../model");
 
 exports.videolist = async (req, res) => {
   let { pageNum = 1, pageSize = 10 } = req.body;
@@ -198,3 +204,29 @@ exports.likeList = async (req, res) => {
 
   res.status(200).json({ likes, totalCount });
 };
+
+// 收藏视频
+exports.collect = async (req, res) => {
+  const { videoId } = req.params;
+  let videoInfo = await Video.findById(videoId);
+  if (!videoInfo) {
+    return res.status(404).json({ error: "视频不存在" });
+  }
+  const userId = req.user.userInfo._id;
+  const record = await Collect.findOne({
+    video: videoId,
+    user: userId,
+  });
+  let isCollect = true;
+  if (record) {
+    return res.status(403).json({ error: "您已收藏该视频了" });
+  }
+
+  const mycollect = await new Collect({
+    video: videoId,
+    user: userId,
+  }).save();
+  res.status(200).json(mycollect);
+};
+
+//热度： 观看 +1， 点赞 +2 ， 评论 +2，  收藏 +3

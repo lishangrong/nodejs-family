@@ -24,6 +24,7 @@ router
   )
   .get("/like/:videoId/", verifyToken(), videoController.like)
   .get("/dislike/:videoId/", verifyToken(), videoController.dislike)
-  .get("/likelist/", verifyToken(), videoController.likeList);
+  .get("/likelist/", verifyToken(), videoController.likeList)
+  .get("/collect/:videoId", verifyToken(), videoController.collect);
 
 module.exports = router;
